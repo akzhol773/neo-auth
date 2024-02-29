@@ -7,6 +7,7 @@ import java.io.Serializable;
 /**
  * DTO for {@link com.neobis.neoauth.entities.User}
  */
-@Data
-public record UserDto(String username, String password) implements Serializable {
+
+
+public record UserRequestDto(String email, String username, String password, String confirmPassword) {
 }
