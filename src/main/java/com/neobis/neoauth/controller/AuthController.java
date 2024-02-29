@@ -1,6 +1,7 @@
 package com.neobis.neoauth.controller;
 
 
+import com.neobis.neoauth.dtos.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,11 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/auth/")
 public class AuthController {
 
-//
-//    @PostMapping("/login")
-//    public ResponseEntity<JwtResponseDto> authenticate(@RequestBody JwtRequestDto authRequest){
-//        return authService.authentication(authRequest);
-//    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDto> login(@RequestBody JwtRequestDto authRequest){
+        return authService.authentication(authRequest);
+    }
 //
 //    @PostMapping("/register")
 //    public ResponseEntity<UserDto> authorize(@RequestBody UserRequestDto registrationUserDto){
