@@ -8,5 +8,5 @@ import lombok.Data;
  */
 
 @Builder
-public record UserResponseDto(String username) {
+public record UserResponseDto(String status, String username) {
 }

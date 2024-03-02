@@ -1,23 +1,33 @@
 package com.neobis.neoauth.service.Impl;
 
+import com.neobis.neoauth.dtos.JwtRequestDto;
+import com.neobis.neoauth.dtos.JwtResponseDto;
 import com.neobis.neoauth.dtos.UserRequestDto;
 import com.neobis.neoauth.dtos.UserResponseDto;
 import com.neobis.neoauth.entities.Role;
 import com.neobis.neoauth.entities.User;
+import com.neobis.neoauth.exceptions.EmailAlreadyExistException;
+import com.neobis.neoauth.exceptions.InvalidCredentialException;
 import com.neobis.neoauth.exceptions.PasswordDontMatchException;
 import com.neobis.neoauth.exceptions.UsernameAlreadyTakenException;
 import com.neobis.neoauth.repository.RoleRepository;
 import com.neobis.neoauth.repository.UserRepository;
 import com.neobis.neoauth.service.RoleService;
 import com.neobis.neoauth.service.UserService;
+import com.neobis.neoauth.util.CustomUserDetails;
+import com.neobis.neoauth.util.JwtTokenUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.Collections;
+import java.util.StringTokenizer;
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +37,18 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtils jwtTokenUtils;
+    private final CustomUserDetails customUserDetails;
 
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
+
         if(userRepository.findByUsername(registrationUserDto.username()).isPresent()){
             throw new UsernameAlreadyTakenException("Username is already taken. Please, try to use another one.");
+        }
+        if(userRepository.findByEmail(registrationUserDto.email()).isPresent()){
+            throw new EmailAlreadyExistException("Email already exist. Please, try to use another one.");
         }
         User user = new User();
         user.setEmail(registrationUserDto.email());
@@ -46,6 +63,18 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(registrationUserDto.password()));
         userRepository.save(user);
-        return ResponseEntity.ok(new UserResponseDto(user.getUsername()));
+        return ResponseEntity.ok(new UserResponseDto("User has been created successfully", user.getUsername()));
+    }
+
+    @Override
+    public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest) {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
+        }catch (BadCredentialsException e){
+            throw new InvalidCredentialException("Invalid username or password");
+        }
+        UserDetails userDetails = customUserDetails.loadUserByUsername(authRequest.username());
+        String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
+        return ResponseEntity.ok(new JwtResponseDto(accessToken, "refreshToken"));
     }
 }

@@ -1,13 +1,18 @@
 package com.neobis.neoauth.dtos;
 
-import lombok.Data;
 
-import java.io.Serializable;
+import javax.validation.constraints.*;
 
-/**
- * DTO for {@link com.neobis.neoauth.entities.User}
- */
+public record UserRequestDto(
+        @Email(message = "Email should be valid")
+        String email,
 
+        @NotBlank(message = "Username is required")
+        @NotNull(message = "Username cannot be null")
+        @Pattern(regexp = "^[a-zA-Z]+$", message = "Username should contain only latin letters")
+        String username,
 
-public record UserRequestDto(String email, String username, String password, String confirmPassword) {
-}
+        @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!])(?!.*\\s).{8,15}$", message = "Password should be valid")
+        String password,
+
+        String confirmPassword) {}
