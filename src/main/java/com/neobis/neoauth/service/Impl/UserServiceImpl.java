@@ -119,13 +119,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String confirmToken(String token) {
-        ConfirmationToken confirmationToken = confirmationTokenService.getToken(token).orElseThrow(()->new IllegalStateException("Token not found"));
+        ConfirmationToken confirmationToken = confirmationTokenService.getToken(token).orElseThrow(()->new TokenNotFoundException("Token not found"));
         if (confirmationToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("Email already confirmed");
+            throw new EmailAlreadyConfirmedException("Email already confirmed");
         }
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
         if(expiredAt.isBefore(LocalDateTime.now())){
-            throw new IllegalStateException("Token has expired");
+            throw new TokenExpiredException("Token has expired");
         }
         confirmationToken.setConfirmedAt(LocalDateTime.now());
         confirmationToken.getUser().setEnabled(true);
