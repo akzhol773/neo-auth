@@ -1,6 +1,7 @@
 package com.neobis.neoauth.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,9 +28,11 @@ public class User  implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Email field should not be blank")
     @Column(nullable = false, unique = true)
     private String email;
 
+    @NotBlank(message = "Username field should not be blank")
     @Column(nullable = false, unique = true)
     private String username;
 

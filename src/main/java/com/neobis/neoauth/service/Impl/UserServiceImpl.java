@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(registrationUserDto.password()));
         userRepository.save(user);
-        return ResponseEntity.ok(new UserResponseDto("User has been created successfully", user.getUsername()));
+        return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
     }
 
     @Override

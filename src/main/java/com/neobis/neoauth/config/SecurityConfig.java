@@ -31,13 +31,13 @@ public class SecurityConfig {
 
     private final CustomUserDetails customUserDetails;
     private final JwtAuthFilter jwtAuthFilter;
-    private final AuthenticationProvider authenticationProvider;
+
 
     @Autowired
-    public SecurityConfig(CustomUserDetails customUserDetails, JwtAuthFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) {
+    public SecurityConfig(CustomUserDetails customUserDetails, JwtAuthFilter jwtAuthFilter) {
         this.customUserDetails = customUserDetails;
         this.jwtAuthFilter = jwtAuthFilter;
-        this.authenticationProvider = authenticationProvider;
+
     }
 
 
@@ -79,7 +79,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
 
                 )
-               .authenticationProvider(authenticationProvider)
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 

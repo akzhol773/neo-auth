@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
+@Data
 @Table(name = "roles")
 public class Role {
     @Id
@@ -31,4 +32,11 @@ public class Role {
     @Fetch(value = FetchMode.SELECT)
     @JsonIgnore
     private List<User> users = new ArrayList<>();
+    public Role(Long id, String description, String name) {
+        this.id = id;
+        this.description = description;
+        this.name = name;
+    }
+
+
 }
