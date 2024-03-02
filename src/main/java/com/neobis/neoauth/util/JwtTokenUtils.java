@@ -27,6 +27,10 @@ public class JwtTokenUtils {
     private static SecretKey getAccessKey() {
         return Keys.hmacShaKeyFor(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
+
+
+
+
     private static SecretKey getRefreshKey() {
         return Keys.hmacShaKeyFor(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
@@ -48,14 +52,7 @@ public class JwtTokenUtils {
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        List<String> roleList = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-        claims.put("roles", roleList);
-
         return Jwts.builder()
-                .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(Instant.now().toEpochMilli()))
                 .setExpiration(new Date(Instant.now().plus(30, ChronoUnit.DAYS).toEpochMilli()))

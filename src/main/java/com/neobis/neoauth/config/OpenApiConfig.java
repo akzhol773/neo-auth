@@ -15,8 +15,8 @@ import io.swagger.v3.oas.annotations.servers.Server;
                         email = "akzholbek0096@gmail.com",
                         url = "https://t.me/akzholbek"
                 ),
-                title = "Bookstore - online book store",
-                description = "OpenApi documentation for Bookstore Spring Project",
+                title = "Lorby online tutoring web app",
+                description = "OpenApi documentation for Lorby Spring Project",
                 version = "0.0.1"
         ),
         servers = {

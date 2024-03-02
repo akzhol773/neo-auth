@@ -4,5 +4,5 @@ import lombok.Builder;
 import lombok.Data;
 
 @Builder
-public record JwtRefreshTokenDto(String newAccessToken, String error) {
+public record JwtRefreshTokenDto(String username, String newAccessToken, String error) {
 }

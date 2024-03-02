@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
         UserDetails userDetails = customUserDetails.loadUserByUsername(authRequest.username());
         String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
         String refreshToken = jwtTokenUtils.generateRefreshToken(userDetails);
-        return ResponseEntity.ok(new JwtResponseDto(accessToken, refreshToken, null));
+        return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken, null));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
-            return ResponseEntity.ok(new JwtRefreshTokenDto(accessToken, null));
+            return ResponseEntity.ok(new JwtRefreshTokenDto(usernameFromRefreshToken, accessToken, null));
 
         } catch (InvalidTokenException e) {
             return ResponseEntity.badRequest().build();
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body( new JwtRefreshTokenDto(null, e.getMessage()));
+                    .body( new JwtRefreshTokenDto(null,null, e.getMessage()));
         }
     }
 }
