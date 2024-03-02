@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Pattern;
 public record UserRequestDto(
         @NotNull (message = "Email field should not be null")
         @NotBlank(message = "Email field should not be blank")
-        @Email(message = "Email should be valid")
+        @Pattern(regexp = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9. -]+\\.[a-zA-Z]{2,4}$", message = "Email should be valid")
         String email,
 
         @NotBlank(message = "Username is required")

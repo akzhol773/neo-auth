@@ -23,5 +23,10 @@ public class RolesInitializer implements ApplicationRunner {
             Role roleUser = new Role(null, "This role is for users.", "ROLE_USER");
             rolesRepository.save(roleUser);
         }
+        if (!rolesRepository.existsByName("ROLE_ADMIN")) {
+
+            Role roleUser = new Role(null, "This role is for admins.", "ROLE_ADMIN");
+            rolesRepository.save(roleUser);
+        }
     }
 }

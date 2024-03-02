@@ -1,10 +1,12 @@
 package com.neobis.neoauth.service.Impl;
 
 import com.neobis.neoauth.dtos.*;
+import com.neobis.neoauth.entities.ConfirmationToken;
 import com.neobis.neoauth.entities.Role;
 import com.neobis.neoauth.entities.User;
 import com.neobis.neoauth.exceptions.*;
 import com.neobis.neoauth.repository.UserRepository;
+import com.neobis.neoauth.service.ConfirmationTokenService;
 import com.neobis.neoauth.service.RoleService;
 import com.neobis.neoauth.service.UserService;
 import com.neobis.neoauth.util.CustomUserDetails;
@@ -21,7 +23,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUtils jwtTokenUtils;
     private final CustomUserDetails customUserDetails;
+    private final ConfirmationTokenService confirmationTokenService;
 
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
@@ -57,6 +63,17 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(registrationUserDto.password()));
         userRepository.save(user);
+
+        String token = UUID.randomUUID().toString();
+        ConfirmationToken confirmationToken = new ConfirmationToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(5),
+                null,
+                user
+        );
+        confirmationTokenService.saveConfirmationToken(confirmationToken);
+
         return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
     }
 
@@ -98,5 +115,21 @@ public class UserServiceImpl implements UserService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body( new JwtRefreshTokenDto(null,null, e.getMessage()));
         }
+    }
+
+    @Override
+    public String confirmToken(String token) {
+        ConfirmationToken confirmationToken = confirmationTokenService.getToken(token).orElseThrow(()->new IllegalStateException("Token not found"));
+        if (confirmationToken.getConfirmedAt() != null) {
+            throw new IllegalStateException("Email already confirmed");
+        }
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+        if(expiredAt.isBefore(LocalDateTime.now())){
+            throw new IllegalStateException("Token has expired");
+        }
+        confirmationToken.setConfirmedAt(LocalDateTime.now());
+        confirmationToken.getUser().setEnabled(true);
+
+        return "Email successfully confirmed";
     }
 }

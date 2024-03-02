@@ -11,4 +11,6 @@ public interface UserService {
     ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest);
 
     ResponseEntity<JwtRefreshTokenDto> refreshToken(String token);
+
+    String confirmToken(String token);
 }
