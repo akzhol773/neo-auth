@@ -1,16 +1,9 @@
 package com.neobis.neoauth.service.Impl;
 
-import com.neobis.neoauth.dtos.JwtRequestDto;
-import com.neobis.neoauth.dtos.JwtResponseDto;
-import com.neobis.neoauth.dtos.UserRequestDto;
-import com.neobis.neoauth.dtos.UserResponseDto;
+import com.neobis.neoauth.dtos.*;
 import com.neobis.neoauth.entities.Role;
 import com.neobis.neoauth.entities.User;
-import com.neobis.neoauth.exceptions.EmailAlreadyExistException;
-import com.neobis.neoauth.exceptions.InvalidCredentialException;
-import com.neobis.neoauth.exceptions.PasswordDontMatchException;
-import com.neobis.neoauth.exceptions.UsernameAlreadyTakenException;
-import com.neobis.neoauth.repository.RoleRepository;
+import com.neobis.neoauth.exceptions.*;
 import com.neobis.neoauth.repository.UserRepository;
 import com.neobis.neoauth.service.RoleService;
 import com.neobis.neoauth.service.UserService;
@@ -19,15 +12,16 @@ import com.neobis.neoauth.util.JwtTokenUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
-import java.util.StringTokenizer;
 
 @Service
 @RequiredArgsConstructor
@@ -44,10 +38,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
 
-        if(userRepository.findByUsername(registrationUserDto.username()).isPresent()){
+        if (userRepository.findByUsername(registrationUserDto.username()).isPresent()) {
             throw new UsernameAlreadyTakenException("Username is already taken. Please, try to use another one.");
         }
-        if(userRepository.findByEmail(registrationUserDto.email()).isPresent()){
+        if (userRepository.findByEmail(registrationUserDto.email()).isPresent()) {
             throw new EmailAlreadyExistException("Email already exist. Please, try to use another one.");
         }
         User user = new User();
@@ -70,11 +64,39 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
-        }catch (BadCredentialsException e){
+        } catch (BadCredentialsException e) {
             throw new InvalidCredentialException("Invalid username or password");
         }
         UserDetails userDetails = customUserDetails.loadUserByUsername(authRequest.username());
         String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
-        return ResponseEntity.ok(new JwtResponseDto(accessToken, "refreshToken"));
+        String refreshToken = jwtTokenUtils.generateRefreshToken(userDetails);
+        return ResponseEntity.ok(new JwtResponseDto(accessToken, refreshToken, null));
+    }
+
+    @Override
+    public ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken) {
+
+        try {
+            if (refreshToken == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(refreshToken);
+            UserDetails userDetails = customUserDetails.loadUserByUsername(usernameFromRefreshToken);
+
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
+            return ResponseEntity.ok(new JwtRefreshTokenDto(accessToken, null));
+
+        } catch (InvalidTokenException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body( new JwtRefreshTokenDto(null, e.getMessage()));
+        }
     }
 }
