@@ -77,6 +77,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Email successfully confirmed"),
 
     })
+    @Hidden
     @GetMapping("/confirm")
     public ResponseEntity<String> confirm(@RequestParam("token") String token){
         return userService.confirmEmail(token);
