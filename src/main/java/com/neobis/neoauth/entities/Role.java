@@ -29,7 +29,6 @@ public class Role {
     private String description;
 
     @ManyToMany(mappedBy = "roles")
-    @Fetch(value = FetchMode.SELECT)
     @JsonIgnore
     private List<User> users = new ArrayList<>();
     public Role(Long id, String description, String name) {

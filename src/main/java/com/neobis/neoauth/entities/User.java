@@ -59,10 +59,16 @@ public class User implements UserDetails{
     private List<Role> roles = new ArrayList<>();
 
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.roles.toString()));
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        for (Role role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+        }
+        return authorities;
     }
+
 
     @Override
     public boolean isAccountNonExpired() {

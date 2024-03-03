@@ -91,17 +91,11 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest) {
 
 
-        try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
-            UserDetails userDetails = customUserDetails.loadUserByUsername(authRequest.username());
-            String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
-            String refreshToken = jwtTokenUtils.generateRefreshToken(userDetails);
+            User user = userRepository.findByUsername(authRequest.username()).orElseThrow();
+            String accessToken = jwtTokenUtils.generateAccessToken(user);
+            String refreshToken = jwtTokenUtils.generateRefreshToken(user);
             return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken, null));
-
-        } catch (BadCredentialsException e) {
-            throw new InvalidCredentialException("Invalid username or password");
-        }
-
 
 
     }
@@ -115,12 +109,12 @@ public class UserServiceImpl implements UserService {
             }
 
             String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(refreshToken);
-            UserDetails userDetails = customUserDetails.loadUserByUsername(usernameFromRefreshToken);
+            User user = userRepository.findByUsername(usernameFromRefreshToken).orElseThrow();
 
-            if (userDetails == null) {
+            if (usernameFromRefreshToken == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
+            String accessToken = jwtTokenUtils.generateAccessToken(user);
             return ResponseEntity.ok(new JwtRefreshTokenDto(usernameFromRefreshToken, accessToken, null));
 
         } catch (InvalidTokenException e) {
