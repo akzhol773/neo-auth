@@ -28,9 +28,6 @@ public class JwtTokenUtils {
         return Keys.hmacShaKeyFor(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
-
-
-
     private static SecretKey getRefreshKey() {
         return Keys.hmacShaKeyFor(REFRESH_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }

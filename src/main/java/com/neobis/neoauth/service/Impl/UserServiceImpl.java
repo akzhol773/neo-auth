@@ -7,17 +7,19 @@ import com.neobis.neoauth.entities.User;
 import com.neobis.neoauth.exceptions.*;
 import com.neobis.neoauth.repository.UserRepository;
 import com.neobis.neoauth.service.ConfirmationTokenService;
+import com.neobis.neoauth.service.EmailService;
 import com.neobis.neoauth.service.RoleService;
 import com.neobis.neoauth.service.UserService;
 import com.neobis.neoauth.util.CustomUserDetails;
+import com.neobis.neoauth.util.EmailTemplates;
 import com.neobis.neoauth.util.JwtTokenUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -39,6 +42,8 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenUtils jwtTokenUtils;
     private final CustomUserDetails customUserDetails;
     private final ConfirmationTokenService confirmationTokenService;
+    private final EmailService emailService;
+    private final EmailTemplates emailTemplates;
 
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
@@ -74,20 +79,31 @@ public class UserServiceImpl implements UserService {
         );
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
+        String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+        emailService.send(
+                registrationUserDto.email(), emailTemplates.buildEmail(registrationUserDto.username(), link)
+        );
+
         return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
     }
 
     @Override
     public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest) {
+
+
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
+            UserDetails userDetails = customUserDetails.loadUserByUsername(authRequest.username());
+            String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
+            String refreshToken = jwtTokenUtils.generateRefreshToken(userDetails);
+            return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken, null));
+
         } catch (BadCredentialsException e) {
             throw new InvalidCredentialException("Invalid username or password");
         }
-        UserDetails userDetails = customUserDetails.loadUserByUsername(authRequest.username());
-        String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
-        String refreshToken = jwtTokenUtils.generateRefreshToken(userDetails);
-        return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken, null));
+
+
+
     }
 
     @Override
@@ -126,6 +142,7 @@ public class UserServiceImpl implements UserService {
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
         if(expiredAt.isBefore(LocalDateTime.now())){
             throw new TokenExpiredException("Token has expired");
+
         }
         confirmationToken.setConfirmedAt(LocalDateTime.now());
         confirmationToken.getUser().setEnabled(true);
