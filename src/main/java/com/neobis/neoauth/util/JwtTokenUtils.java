@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenUtils {
 
-    private static final String ACCESS_SECRET_KEY = "12638ab829cd93729ef9327340291cd8484299f438362ba6";
-    private static final String REFRESH_SECRET_KEY = "5555ab829cd93729ef9374628291cd8484299f438362ba67";
+    private static final String ACCESS_SECRET_KEY = System.getenv("ACCESS_KEY");
+    private static final String REFRESH_SECRET_KEY = System.getenv("REFRESH_KEY");
 
     private static SecretKey getAccessKey() {
         return Keys.hmacShaKeyFor(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
@@ -49,9 +49,9 @@ public class JwtTokenUtils {
                 .compact();
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
+    public String generateRefreshToken(User user) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date(Instant.now().toEpochMilli()))
                 .setExpiration(new Date(Instant.now().plus(30, ChronoUnit.DAYS).toEpochMilli()))
                 .signWith(getRefreshKey())

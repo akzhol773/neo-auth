@@ -21,6 +21,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +42,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenUtils jwtTokenUtils;
-    private final CustomUserDetails customUserDetails;
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailService emailService;
     private final EmailTemplates emailTemplates;
@@ -90,14 +91,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest) {
 
-
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
-            User user = userRepository.findByUsername(authRequest.username()).orElseThrow();
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
+            User user = (User) authentication.getPrincipal();
             String accessToken = jwtTokenUtils.generateAccessToken(user);
             String refreshToken = jwtTokenUtils.generateRefreshToken(user);
             return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken, null));
 
 
+        } catch (AuthenticationException exception) {
+            if (exception instanceof DisabledException) {
+                throw new DisabledException("User is not enabled yet");
+            } else {
+                throw new BadCredentialsException("Invalid username or password");
+            }
+        }
     }
 
     @Override
@@ -141,6 +149,6 @@ public class UserServiceImpl implements UserService {
         confirmationToken.setConfirmedAt(LocalDateTime.now());
         confirmationToken.getUser().setEnabled(true);
 
-        return "Email successfully confirmed";
+        return "Email successfully confirmed. Go back to your login page";
     }
 }

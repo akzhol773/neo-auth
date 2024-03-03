@@ -53,12 +53,30 @@ public class AuthController {
     public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRequestDto registrationUserDto){
         return  userService.createNewUser(registrationUserDto);}
 
+
+    @Operation(
+            summary = "Refresh the token",
+            description = "If the token is expired then it is possible to generate a new access token using refresh token"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successfully returned a new access token"),
+
+    })
+
     @PostMapping("/refresh-token")
     public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestParam String refreshToken){
         return  userService.refreshToken(refreshToken);
 
     }
 
+    @Operation(
+            summary = "Confirm the email using this api",
+            description = "Whenever a user is registered he or she gets email containing link to activate his or her account"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Email successfully confirmed"),
+
+    })
     @GetMapping("/confirm")
     public String confirm(@RequestParam("token") String token){
         return userService.confirmToken(token);
