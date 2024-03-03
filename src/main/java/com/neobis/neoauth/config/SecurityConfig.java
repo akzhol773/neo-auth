@@ -58,9 +58,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.addAllowedOrigin("https://neobis-front-tour-fe8c84frn-baisalkalykov.vercel.app");
-                    configuration.addAllowedOrigin("http://localhost:8080");
-                    configuration.addAllowedOrigin("http://localhost:8080/swagger-ui/index.html#/");
+                    configuration.addAllowedOrigin("https://vercel.com/umars-projects-fa2018ce/neobis-front-auth");
+                    configuration.addAllowedOrigin("http://localhost:3000");
                     configuration.addAllowedHeader("*");
                     configuration.addAllowedMethod("*");
                     return configuration;
