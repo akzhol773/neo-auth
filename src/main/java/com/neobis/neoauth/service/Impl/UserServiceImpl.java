@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
         );
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
-        String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/confirm?token=" + token;
         emailService.send(
                 registrationUserDto.email(), emailTemplates.buildEmail(registrationUserDto.username(), link)
         );
