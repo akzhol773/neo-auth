@@ -12,10 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-
 
 
 @RestController
@@ -24,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+
 
     @Operation(
             summary = "Login",
@@ -80,8 +78,18 @@ public class AuthController {
 
     })
     @GetMapping("/confirm")
-    public String confirm(@RequestParam("token") String token){
-        return userService.confirmToken(token);
+    public ResponseEntity<String> confirm(@RequestParam("token") String token){
+        return userService.confirmEmail(token);
     }
+
+    @PostMapping("/resend-confirmation")
+    public ResponseEntity<String> reconfirm(@RequestBody UsernameEmailDto usernameEmailDto) {
+        return  userService.resendConfirmation(usernameEmailDto);
+
+    }
+
+
+
+
 
 }

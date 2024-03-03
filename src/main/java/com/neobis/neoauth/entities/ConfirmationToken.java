@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 @Getter
 @Setter
+@Data
 @NoArgsConstructor
 @Entity
 public class ConfirmationToken {
@@ -16,7 +17,6 @@ public class ConfirmationToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String token;
 
     @Column(nullable = false)
