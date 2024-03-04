@@ -13,13 +13,13 @@ public interface UserService {
 
     ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest);
 
-    ResponseEntity<JwtRefreshTokenDto> refreshToken(NewAccessTokenRequest token);
+    ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken);
 
     ResponseEntity<String> confirmEmail(String token);
 
     ConfirmationToken generateConfirmToken(User user);
 
-    ResponseEntity<String> resendConfirmation(UsernameEmailDto usernameEmailDto);
+    ResponseEntity<String> resendConfirmation(ReconfirmEmailDto dto);
     public void sendConfirmationMail(String link, User user);
 
     ResponseEntity<String> forgotPassword(ForgotPassworDto dto);

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.management.relation.RoleNotFoundException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -105,6 +106,81 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         return ResponseEntity.badRequest().body(body);
     }
+
+    @ExceptionHandler(EmailAlreadyConfirmedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Object> handleEmailAlreadyConfirmedException(
+            EmailAlreadyConfirmedException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleInvalidTokenException(
+            InvalidTokenException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleTokenExpiredException(
+            TokenExpiredException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(TokenNotFoundException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleTokenNotFoundException(
+            TokenNotFoundException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(UserNotEnabledException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleUserNotEnabledException(
+            UserNotEnabledException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<Object> handleIllegalStateException(
+            IllegalStateException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(UserRoleNotFoundException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<Object> handleUserRoleNotFoundException(
+            UserRoleNotFoundException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+
+
+
+
 
 
 }

@@ -29,8 +29,9 @@ public class AuthController {
 
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Successfully returned a token"),
-            @ApiResponse(responseCode = "409", description = "Username or password is invalid", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successfully returned a token"),
+            @ApiResponse(responseCode = "403", description = "Username or password is invalid"),
+            @ApiResponse(responseCode = "403", description = "Username is enabled")
     })
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> login(@RequestBody JwtRequestDto authRequest){
@@ -43,8 +44,10 @@ public class AuthController {
             description = "Endpoint for customer to register a new account. Requires a body"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Customer successfully registered"),
-            @ApiResponse(responseCode = "403", description = "The provided username is already taken", content = @Content)
+            @ApiResponse(responseCode = "200", description = "User successfully registered"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "409", description = "The provided username is already taken"),
+            @ApiResponse(responseCode = "409", description = "The provided email is already taken")
     })
 
     @PostMapping("/register")
@@ -59,22 +62,27 @@ public class AuthController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully returned a new access token"),
+            @ApiResponse(responseCode = "403", description = "Token has expired"),
+            @ApiResponse(responseCode = "403", description = "Token not found"),
 
     })
 
     @Hidden
     @PostMapping("/refresh-token")
-    public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestBody NewAccessTokenRequest newAccessTokenRequest){
-         return  userService.refreshToken(newAccessTokenRequest);
+    public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestParam("refreshToken") String refreshToken){
+         return  userService.refreshToken(refreshToken);
 
     }
 
     @Operation(
-            summary = "Confirm the email using this api",
+            summary = "Confirm the email",
             description = "Whenever a user is registered he or she gets email containing link to activate his or her account"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Email successfully confirmed"),
+            @ApiResponse(responseCode = "403", description = "Token has expired"),
+            @ApiResponse(responseCode = "403", description = "Token not found")
+
 
     })
     @Hidden
@@ -83,17 +91,48 @@ public class AuthController {
         return userService.confirmEmail(token);
     }
 
+
+    @Operation(
+            summary = "Reconfirm the email",
+            description = "User can get another link to confirm their email"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Email successfully confirmed"),
+            @ApiResponse(responseCode = "403", description = "Token has expired"),
+            @ApiResponse(responseCode = "403", description = "Token not found")
+
+    })
     @PostMapping("/re-confirm-email")
-    public ResponseEntity<String> reconfirm(@RequestBody UsernameEmailDto usernameEmailDto) {
-        return  userService.resendConfirmation(usernameEmailDto);
+    public ResponseEntity<String> reconfirm(@RequestBody ReconfirmEmailDto dto) {
+        return  userService.resendConfirmation(dto);
 
     }
 
+
+
+    @Operation(
+            summary = "Users can reset their password using this link. It sends link to the email",
+            description = "User can get another link to confirm their email"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Link has been sent to the email"),
+            @ApiResponse(responseCode = "403", description = "User not found"),
+
+    })
     @PutMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPassworDto dto){
         return userService.forgotPassword(dto);
     }
 
+    @Operation(
+            summary = "Reset password",
+            description = "Resetting the password with the provided new password"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password has been changed successfully"),
+            @ApiResponse(responseCode = "403", description = "Invalid token"),
+
+    })
     @PutMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestParam ("resetToken") String resetToken, @RequestBody ResetPasswordDto resetPasswordDto){
         return userService.resetPassword(resetToken, resetPasswordDto);

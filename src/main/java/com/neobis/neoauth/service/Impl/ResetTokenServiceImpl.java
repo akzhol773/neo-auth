@@ -7,6 +7,7 @@ import com.neobis.neoauth.service.ResetTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class ResetTokenServiceImpl implements ResetTokenService {
     public Optional<PasswordResetToken> getToken(String token) {
         return repository.findByToken(token);
     }
+
 
 
 }

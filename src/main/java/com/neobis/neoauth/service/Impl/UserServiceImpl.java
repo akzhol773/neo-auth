@@ -25,7 +25,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -45,11 +44,11 @@ public class UserServiceImpl implements UserService {
     private final EmailTemplates emailTemplates;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final ResetTokenService resetTokenService;
-
+    private final ResetTokenServiceRepository resetTokenServiceRepository;
+    private static final String CONFIRM_EMAIL_LINK = System.getenv("CONFIRM_EMAIL_LINK");
+    private static final String RESET_PASSWORD_EMAIL_LINK = System.getenv("RESET_PASSWORD_EMAIL_LINK");
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
-
-
 
         if (userRepository.findByUsername(registrationUserDto.username()).isPresent()) {
             throw new UsernameAlreadyTakenException("Username is already taken. Please, try to use another one.");
@@ -62,7 +61,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(registrationUserDto.email());
         user.setUsername(registrationUserDto.username());
         Role userRole = roleService.getUserRole()
-                .orElseThrow(() -> new RuntimeException("Error: Role not found."));
+                .orElseThrow(() -> new UserRoleNotFoundException("Role not found."));
         user.setRoles(Collections.singletonList(userRole));
         String password = registrationUserDto.password();
         String confirmPassword = registrationUserDto.confirmPassword();
@@ -75,13 +74,11 @@ public class UserServiceImpl implements UserService {
         ConfirmationToken confirmationToken = generateConfirmToken(user);
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
-        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/confirm-email?token=" + confirmationToken.getToken();
+        String link = CONFIRM_EMAIL_LINK + confirmationToken.getToken();
         sendConfirmationMail(link, user);
 
         return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
     }
-
-
 
 
     @Override
@@ -105,14 +102,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<JwtRefreshTokenDto> refreshToken(NewAccessTokenRequest newAccessTokenRequest) {
+    public ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken) {
 
         try {
-            if (newAccessTokenRequest == null) {
+            if (refreshToken == null) {
                 return ResponseEntity.badRequest().build();
             }
 
-            String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(newAccessTokenRequest.refreshToken());
+            String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(refreshToken);
             User user = userRepository.findByUsername(usernameFromRefreshToken).orElseThrow(() ->
                     new UsernameNotFoundException("User not found"));
 
@@ -162,12 +159,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<String> resendConfirmation(UsernameEmailDto usernameEmailDto) {
-        User user = userRepository.findByUsernameAndEmail(
-                usernameEmailDto.username(), usernameEmailDto.email()).orElseThrow(() ->
+    public ResponseEntity<String> resendConfirmation(ReconfirmEmailDto dto) {
+        User user = userRepository.findByEmail(dto.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         if(user.isEnabled()){
-            throw new UserConfirmedException("Email already confirmed");
+            throw new EmailAlreadyConfirmedException("Email already confirmed");
         }
 
         List<ConfirmationToken> confirmationTokens = confirmationTokenRepository.findByUser(user);
@@ -179,24 +175,31 @@ public class UserServiceImpl implements UserService {
 
         ConfirmationToken newConfirmationToken = generateConfirmToken(user);
         confirmationTokenRepository.save(newConfirmationToken);
-        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/confirm?token=" + newConfirmationToken.getToken();
+        String link = CONFIRM_EMAIL_LINK + newConfirmationToken.getToken();
         sendConfirmationMail(link, user);
         return ResponseEntity.ok("Success! Please, check your email for the re-confirmation");
     }
 
     @Override
     public void sendConfirmationMail(String link, User user){
-        emailService.send(user.getEmail(), emailTemplates.buildEmail(user.getUsername(), link));
+        emailService.sendConfirm(user.getEmail(), emailTemplates.buildEmail(user.getUsername(), link));
     }
 
     @Override
     public ResponseEntity<String> forgotPassword(ForgotPassworDto dto) {
         User user = userRepository.findByEmail(dto.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
+
+        List<PasswordResetToken> confirmationTokens = resetTokenServiceRepository.findByUser(user);
+        for(PasswordResetToken confirmationToken : confirmationTokens){
+            confirmationToken.setToken(null);
+            resetTokenServiceRepository.save(confirmationToken);
+        }
+
         PasswordResetToken confirmationToken = generateResetToken(user);
         resetTokenService.saveResetToken(confirmationToken);
 
-        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/reset-password?resetToken=" + confirmationToken.getToken();
+        String link = RESET_PASSWORD_EMAIL_LINK + confirmationToken.getToken();
         sendPasswordResetMail(link, user);
 
         return ResponseEntity.ok().body("Email sent to reset your password");
@@ -204,7 +207,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void sendPasswordResetMail(String link, User user) {
-        emailService.send(user.getEmail(), emailTemplates.buildPasswordResetEmail(user.getUsername(), link));
+        emailService.sendReset(user.getEmail(), emailTemplates.buildPasswordResetEmail(user.getUsername(), link));
     }
 
     @Override

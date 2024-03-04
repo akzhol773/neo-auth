@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     @Override
-    public void send(String to, String email) {
+    public void sendConfirm(String to, String email) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper =
@@ -28,5 +28,21 @@ public class EmailServiceImpl implements EmailService {
             throw new IllegalStateException("Failed to send email");
         }
 
+    }
+
+    @Override
+    public void sendReset(String to, String email) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(mimeMessage, "utf-8");
+            helper.setText(email, true);
+            helper.setTo(to);
+            helper.setSubject("Reset your password");
+            helper.setFrom("lorby@edu.com");
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            throw new IllegalStateException("Failed to send email");
+        }
     }
 }
