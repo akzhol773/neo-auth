@@ -2,15 +2,14 @@ package com.neobis.neoauth.service.Impl;
 
 import com.neobis.neoauth.dtos.*;
 import com.neobis.neoauth.entities.ConfirmationToken;
+import com.neobis.neoauth.entities.PasswordResetToken;
 import com.neobis.neoauth.entities.Role;
 import com.neobis.neoauth.entities.User;
 import com.neobis.neoauth.exceptions.*;
 import com.neobis.neoauth.repository.ConfirmationTokenRepository;
+import com.neobis.neoauth.repository.ResetTokenServiceRepository;
 import com.neobis.neoauth.repository.UserRepository;
-import com.neobis.neoauth.service.ConfirmationTokenService;
-import com.neobis.neoauth.service.EmailService;
-import com.neobis.neoauth.service.RoleService;
-import com.neobis.neoauth.service.UserService;
+import com.neobis.neoauth.service.*;
 import com.neobis.neoauth.util.EmailTemplates;
 import com.neobis.neoauth.util.JwtTokenUtils;
 import jakarta.transaction.Transactional;
@@ -45,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final EmailTemplates emailTemplates;
     private final ConfirmationTokenRepository confirmationTokenRepository;
+    private final ResetTokenService resetTokenService;
 
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
@@ -113,7 +113,8 @@ public class UserServiceImpl implements UserService {
             }
 
             String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(newAccessTokenRequest.refreshToken());
-            User user = userRepository.findByUsername(usernameFromRefreshToken).orElseThrow();
+            User user = userRepository.findByUsername(usernameFromRefreshToken).orElseThrow(() ->
+                    new UsernameNotFoundException("User not found"));
 
             if (usernameFromRefreshToken == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -186,5 +187,54 @@ public class UserServiceImpl implements UserService {
     @Override
     public void sendConfirmationMail(String link, User user){
         emailService.send(user.getEmail(), emailTemplates.buildEmail(user.getUsername(), link));
+    }
+
+    @Override
+    public ResponseEntity<String> forgotPassword(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() ->
+                new UsernameNotFoundException("User not found"));
+        PasswordResetToken confirmationToken = generateResetToken(user);
+        resetTokenService.saveResetToken(confirmationToken);
+
+        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/reset-password?token=" + confirmationToken.getToken();
+        sendPasswordResetMail(link, user);
+
+        return ResponseEntity.ok().body("Email sent to reset your password");
+    }
+
+    @Override
+    public void sendPasswordResetMail(String link, User user) {
+        emailService.send(user.getEmail(), emailTemplates.buildPasswordResetEmail(user.getUsername(), link));
+    }
+
+    @Override
+    public ResponseEntity<String> resetPassword(String resetToken, ResetPasswordDto dto) {
+        PasswordResetToken confirmationToken = resetTokenService.getToken(resetToken).orElseThrow(()->new TokenNotFoundException("Token not found"));
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+        if(expiredAt.isBefore(LocalDateTime.now())){
+            throw new TokenExpiredException("Token has expired");
+        }
+        confirmationToken.setResetAt(LocalDateTime.now());
+        String password = dto.newPassword();
+        String confirmPassword = dto.confirmNewPassword();
+        if (!password.equals(confirmPassword)) {
+            throw new PasswordDontMatchException("Passwords do not match.");
+        }
+        User user = confirmationToken.getUser();
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+        return ResponseEntity.ok().body("Password has been changed successfully");
+    }
+
+    @Override
+    public PasswordResetToken generateResetToken(User user) {
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken confirmationToken = new PasswordResetToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(5),
+                null,
+                user);
+        return confirmationToken;
     }
 }

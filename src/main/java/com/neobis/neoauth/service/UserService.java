@@ -2,6 +2,7 @@ package com.neobis.neoauth.service;
 
 import com.neobis.neoauth.dtos.*;
 import com.neobis.neoauth.entities.ConfirmationToken;
+import com.neobis.neoauth.entities.PasswordResetToken;
 import com.neobis.neoauth.entities.User;
 import org.springframework.http.ResponseEntity;
 
@@ -20,4 +21,10 @@ public interface UserService {
 
     ResponseEntity<String> resendConfirmation(UsernameEmailDto usernameEmailDto);
     public void sendConfirmationMail(String link, User user);
+
+    ResponseEntity<String> forgotPassword(String email);
+    public void sendPasswordResetMail(String link, User user);
+
+    ResponseEntity<String> resetPassword(String resetToken, ResetPasswordDto dto);
+    public PasswordResetToken generateResetToken(User user);
 }

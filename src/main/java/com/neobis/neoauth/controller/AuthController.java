@@ -78,16 +78,27 @@ public class AuthController {
 
     })
     @Hidden
-    @GetMapping("/confirm")
+    @GetMapping("/confirm-email")
     public ResponseEntity<String> confirm(@RequestParam("token") String token){
         return userService.confirmEmail(token);
     }
 
-    @PostMapping("/resend-confirmation")
+    @PostMapping("/resend-confirm-email")
     public ResponseEntity<String> reconfirm(@RequestBody UsernameEmailDto usernameEmailDto) {
         return  userService.resendConfirmation(usernameEmailDto);
 
     }
+
+    @PutMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody String email){
+        return userService.forgotPassword(email);
+    }
+
+    @PutMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam ("resetToken") String resetToken, @RequestBody ResetPasswordDto resetPasswordDto){
+        return userService.resetPassword(resetToken, resetPasswordDto);
+    }
+
 
 
 
