@@ -196,7 +196,7 @@ public class UserServiceImpl implements UserService {
         PasswordResetToken confirmationToken = generateResetToken(user);
         resetTokenService.saveResetToken(confirmationToken);
 
-        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/reset-password?token=" + confirmationToken.getToken();
+        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/reset-password?resetToken=" + confirmationToken.getToken();
         sendPasswordResetMail(link, user);
 
         return ResponseEntity.ok().body("Email sent to reset your password");
