@@ -83,7 +83,7 @@ public class AuthController {
         return userService.confirmEmail(token);
     }
 
-    @PostMapping("/resend-confirm-email")
+    @PostMapping("/re-confirm-email")
     public ResponseEntity<String> reconfirm(@RequestBody UsernameEmailDto usernameEmailDto) {
         return  userService.resendConfirmation(usernameEmailDto);
 
