@@ -12,7 +12,7 @@ public interface UserService {
 
     ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest);
 
-    ResponseEntity<JwtRefreshTokenDto> refreshToken(String token);
+    ResponseEntity<JwtRefreshTokenDto> refreshToken(NewAccessTokenRequest token);
 
     ResponseEntity<String> confirmEmail(String token);
 

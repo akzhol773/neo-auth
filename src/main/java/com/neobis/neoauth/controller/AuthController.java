@@ -64,8 +64,8 @@ public class AuthController {
 
     @Hidden
     @PostMapping("/refresh-token")
-    public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestParam String refreshToken){
-         return  userService.refreshToken(refreshToken);
+    public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestBody NewAccessTokenRequest newAccessTokenRequest){
+         return  userService.refreshToken(newAccessTokenRequest);
 
     }
 

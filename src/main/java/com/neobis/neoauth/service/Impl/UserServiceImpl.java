@@ -105,14 +105,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken) {
+    public ResponseEntity<JwtRefreshTokenDto> refreshToken(NewAccessTokenRequest newAccessTokenRequest) {
 
         try {
-            if (refreshToken == null) {
+            if (newAccessTokenRequest == null) {
                 return ResponseEntity.badRequest().build();
             }
 
-            String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(refreshToken);
+            String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(newAccessTokenRequest.refreshToken());
             User user = userRepository.findByUsername(usernameFromRefreshToken).orElseThrow();
 
             if (usernameFromRefreshToken == null) {
