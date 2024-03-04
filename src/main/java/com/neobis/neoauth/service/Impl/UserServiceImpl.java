@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
         ConfirmationToken confirmationToken = generateConfirmToken(user);
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
-        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/confirm?token=" + confirmationToken.getToken();
+        String link = "https://royal-nerve-lorby.up.railway.app/api/auth/confirm-email?token=" + confirmationToken.getToken();
         sendConfirmationMail(link, user);
 
         return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
