@@ -90,8 +90,8 @@ public class AuthController {
     }
 
     @PutMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody String email){
-        return userService.forgotPassword(email);
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPassworDto dto){
+        return userService.forgotPassword(dto);
     }
 
     @PutMapping("/reset-password")

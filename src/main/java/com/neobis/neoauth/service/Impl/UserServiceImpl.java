@@ -190,8 +190,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<String> forgotPassword(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() ->
+    public ResponseEntity<String> forgotPassword(ForgotPassworDto dto) {
+        User user = userRepository.findByEmail(dto.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         PasswordResetToken confirmationToken = generateResetToken(user);
         resetTokenService.saveResetToken(confirmationToken);

@@ -22,7 +22,7 @@ public interface UserService {
     ResponseEntity<String> resendConfirmation(UsernameEmailDto usernameEmailDto);
     public void sendConfirmationMail(String link, User user);
 
-    ResponseEntity<String> forgotPassword(String email);
+    ResponseEntity<String> forgotPassword(ForgotPassworDto dto);
     public void sendPasswordResetMail(String link, User user);
 
     ResponseEntity<String> resetPassword(String resetToken, ResetPasswordDto dto);
