@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByUsername(registrationUserDto.username()).isPresent()) {
             throw new UsernameAlreadyTakenException("Username is already taken. Please, try to use another one.");
         }
-        if (userRepository.findByEmail(registrationUserDto.email()).isPresent()) {
+        if (userRepository.findByEmailOrUsername(registrationUserDto.email()).isPresent()) {
             throw new EmailAlreadyExistException("Email already exist. Please, try to use another one.");
         }
         User user = new User();
@@ -179,7 +179,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<String> resendConfirmation(ReconfirmEmailDto dto) {
-        User user = userRepository.findByEmail(dto.email()).orElseThrow(() ->
+        User user = userRepository.findByEmailOrUsername(dto.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         if(user.isEnabled()){
             throw new EmailAlreadyConfirmedException("Email already confirmed");
@@ -205,8 +205,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<String> forgotPassword(ForgotPassworDto dto) {
-        User user = userRepository.findByEmail(dto.email()).orElseThrow(() ->
+    public ResponseEntity<String> forgotPassword(ForgotPasswordDto dto) {
+        User user = userRepository.findByEmailOrUsername(dto.emailOrUsername()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
 
         List<PasswordResetToken> confirmationTokens = resetTokenServiceRepository.findByUser(user);

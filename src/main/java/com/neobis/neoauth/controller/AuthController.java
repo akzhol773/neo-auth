@@ -5,7 +5,6 @@ import com.neobis.neoauth.dtos.*;
 import com.neobis.neoauth.service.UserService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -121,7 +120,7 @@ public class AuthController {
     })
     @Hidden
     @PutMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPassworDto dto){
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDto dto){
         return userService.forgotPassword(dto);
     }
 
