@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 @Service
 @RequiredArgsConstructor
-
 public class ResetTokenServiceImpl implements ResetTokenService {
 
     private final ResetTokenServiceRepository repository;

@@ -13,7 +13,7 @@ import com.neobis.neoauth.service.*;
 import com.neobis.neoauth.util.EmailTemplates;
 import com.neobis.neoauth.util.JwtTokenUtils;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,9 +31,24 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class UserServiceImpl implements UserService {
+
+    @Autowired
+    public UserServiceImpl(UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtTokenUtils jwtTokenUtils, ConfirmationTokenService confirmationTokenService, EmailService emailService, EmailTemplates emailTemplates, ConfirmationTokenRepository confirmationTokenRepository, ResetTokenService resetTokenService, ResetTokenServiceRepository resetTokenServiceRepository) {
+        this.userRepository = userRepository;
+        this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenUtils = jwtTokenUtils;
+        this.confirmationTokenService = confirmationTokenService;
+        this.emailService = emailService;
+        this.emailTemplates = emailTemplates;
+        this.confirmationTokenRepository = confirmationTokenRepository;
+        this.resetTokenService = resetTokenService;
+        this.resetTokenServiceRepository = resetTokenServiceRepository;
+    }
+
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
@@ -47,6 +62,8 @@ public class UserServiceImpl implements UserService {
     private final ResetTokenServiceRepository resetTokenServiceRepository;
     private static final String CONFIRM_EMAIL_LINK = System.getenv("CONFIRM_EMAIL_LINK");
     private static final String RESET_PASSWORD_EMAIL_LINK = System.getenv("RESET_PASSWORD_EMAIL_LINK");
+
+
     @Override
     public ResponseEntity<UserResponseDto> createNewUser(UserRequestDto registrationUserDto) {
 
@@ -81,6 +98,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
     @Override
     public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto authRequest) {
 
@@ -89,7 +107,7 @@ public class UserServiceImpl implements UserService {
             User user = (User) authentication.getPrincipal();
             String accessToken = jwtTokenUtils.generateAccessToken(user);
             String refreshToken = jwtTokenUtils.generateRefreshToken(user);
-            return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken, null));
+            return ResponseEntity.ok(new JwtResponseDto(authRequest.username(), accessToken, refreshToken));
 
 
         } catch (AuthenticationException exception) {
@@ -101,6 +119,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     @Override
     public ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken) {
 
@@ -110,22 +129,22 @@ public class UserServiceImpl implements UserService {
             }
 
             String usernameFromRefreshToken = jwtTokenUtils.getUsernameFromRefreshToken(refreshToken);
+            if (usernameFromRefreshToken == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
             User user = userRepository.findByUsername(usernameFromRefreshToken).orElseThrow(() ->
                     new UsernameNotFoundException("User not found"));
 
-            if (usernameFromRefreshToken == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+
             String accessToken = jwtTokenUtils.generateAccessToken(user);
-            return ResponseEntity.ok(new JwtRefreshTokenDto(usernameFromRefreshToken, accessToken, null));
+            return ResponseEntity.ok(new JwtRefreshTokenDto(usernameFromRefreshToken, accessToken));
 
         } catch (InvalidTokenException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body( new JwtRefreshTokenDto(null,null, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
