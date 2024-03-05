@@ -111,10 +111,10 @@ public class UserServiceImpl implements UserService {
 
 
         } catch (AuthenticationException exception) {
-            if (exception instanceof DisabledException) {
-                throw new DisabledException("User is not enabled yet");
-            } else {
+            if (exception instanceof BadCredentialsException) {
                 throw new BadCredentialsException("Invalid username or password");
+            } else {
+                throw new DisabledException("User is not enabled yet");
             }
         }
     }
