@@ -66,7 +66,6 @@ public class AuthController {
 
     })
 
-    @Hidden
     @PostMapping("/refresh-token")
     public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestParam("refreshToken") String refreshToken){
          return  userService.refreshToken(refreshToken);
@@ -118,7 +117,6 @@ public class AuthController {
             @ApiResponse(responseCode = "403", description = "User not found"),
 
     })
-    @Hidden
     @PutMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDto dto){
         return userService.forgotPassword(dto);
@@ -133,7 +131,6 @@ public class AuthController {
             @ApiResponse(responseCode = "403", description = "Invalid token"),
 
     })
-    @Hidden
     @PutMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestParam ("resetToken") String resetToken, @RequestBody ResetPasswordDto resetPasswordDto){
         return userService.resetPassword(resetToken, resetPasswordDto);
