@@ -1,9 +1,9 @@
 package com.neobis.neoauth.service;
 
 
-
+import com.neobis.neoauth.entities.User;
 
 public interface EmailService {
-    void sendConfirm(String to, String email);
-    void sendReset(String to, String email);
+    public void sendConfirmationMail(String link, User user);
+    public void sendForgotPasswordMail(String link, User user);
 }

@@ -10,7 +10,6 @@ import com.neobis.neoauth.repository.ConfirmationTokenRepository;
 import com.neobis.neoauth.repository.ResetTokenServiceRepository;
 import com.neobis.neoauth.repository.UserRepository;
 import com.neobis.neoauth.service.*;
-import com.neobis.neoauth.util.EmailTemplates;
 import com.neobis.neoauth.util.JwtTokenUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +25,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -37,7 +36,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtTokenUtils jwtTokenUtils, ConfirmationTokenService confirmationTokenService, EmailService emailService, EmailTemplates emailTemplates, ConfirmationTokenRepository confirmationTokenRepository, ResetTokenService resetTokenService, ResetTokenServiceRepository resetTokenServiceRepository) {
+    public UserServiceImpl(UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtTokenUtils jwtTokenUtils, ConfirmationTokenService confirmationTokenService, EmailService emailService, ConfirmationTokenRepository confirmationTokenRepository, ResetTokenService resetTokenService, ResetTokenServiceRepository resetTokenServiceRepository) {
         this.userRepository = userRepository;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
@@ -45,7 +44,6 @@ public class UserServiceImpl implements UserService {
         this.jwtTokenUtils = jwtTokenUtils;
         this.confirmationTokenService = confirmationTokenService;
         this.emailService = emailService;
-        this.emailTemplates = emailTemplates;
         this.confirmationTokenRepository = confirmationTokenRepository;
         this.resetTokenService = resetTokenService;
         this.resetTokenServiceRepository = resetTokenServiceRepository;
@@ -58,7 +56,6 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenUtils jwtTokenUtils;
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailService emailService;
-    private final EmailTemplates emailTemplates;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final ResetTokenService resetTokenService;
     private final ResetTokenServiceRepository resetTokenServiceRepository;
@@ -94,7 +91,7 @@ public class UserServiceImpl implements UserService {
         confirmationTokenService.saveConfirmationToken(confirmationToken);
 
         String link = CONFIRM_EMAIL_LINK + confirmationToken.getToken();
-        sendConfirmationMail(link, user);
+        emailService.sendConfirmationMail(link, user);
 
         return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
     }
@@ -197,14 +194,12 @@ public class UserServiceImpl implements UserService {
         ConfirmationToken newConfirmationToken = generateConfirmToken(user);
         confirmationTokenRepository.save(newConfirmationToken);
         String link = CONFIRM_EMAIL_LINK + newConfirmationToken.getToken();
-        sendConfirmationMail(link, user);
+        emailService.sendConfirmationMail(link, user);
         return ResponseEntity.ok("Success! Please, check your email for the re-confirmation");
     }
 
-    @Override
-    public void sendConfirmationMail(String link, User user){
-        emailService.sendConfirm(user.getEmail(), emailTemplates.buildEmail(user.getUsername(), link));
-    }
+
+
 
     @Override
     public ResponseEntity<String> forgotPassword(ForgotPasswordDto dto) {
@@ -221,15 +216,13 @@ public class UserServiceImpl implements UserService {
         resetTokenService.saveResetToken(confirmationToken);
 
         String link = RESET_PASSWORD_EMAIL_LINK + confirmationToken.getToken();
-        sendPasswordResetMail(link, user);
+
+        emailService.sendForgotPasswordMail(link, user);
+
 
         return ResponseEntity.ok().body("Email sent to reset your password");
     }
 
-    @Override
-    public void sendPasswordResetMail(String link, User user) {
-        emailService.sendReset(user.getEmail(), emailTemplates.buildPasswordResetEmail(user.getUsername(), link));
-    }
 
     @Override
     public ResponseEntity<String> resetPassword(String resetToken, ResetPasswordDto dto) {
@@ -272,7 +265,7 @@ public class UserServiceImpl implements UserService {
             confirmationTokenService.saveConfirmationToken(confirmationToken);
 
             String link = CONFIRM_EMAIL_LINK + confirmationToken.getToken();
-            sendConfirmationMail(link, user);
+            emailService.sendConfirmationMail(link, user);
         }
 
     }
