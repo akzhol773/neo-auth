@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.addAllowedOrigin("https://vercel.com/umars-projects-fa2018ce/neobis-front-auth");
+                     configuration.addAllowedOrigin("https://neobis-front-auth-six.vercel.app");
                     configuration.addAllowedOrigin("http://localhost:3007");
                     configuration.addAllowedHeader("*");
                     configuration.addAllowedMethod("*");
